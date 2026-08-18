@@ -12,7 +12,8 @@ case "${1:-}" in
   sandbox)
     "${BRIDGE[@]}" sandbox-probe \
       --image alpine:3.21 \
-      --command 'echo sandbox-ok'
+      --command 'echo sandbox-ok' \
+      | uv --project "$REPO" run python "$REPO/scripts/readme_demo_stream.py"
     ;;
   scan)
     demo_dir="$(mktemp -d "${TMPDIR:-/tmp}/strix-claude-readme.XXXXXX")"

@@ -4,12 +4,14 @@ Require uv
 Require docker
 
 Set Shell "bash"
-Set FontFamily "JetBrains Mono"
-Set FontSize 18
-Set Width 1280
-Set Height 760
-Set Padding 28
-Set Margin 24
+Set FontFamily "Menlo"
+Set FontSize 17
+Set LetterSpacing 0
+Set LineHeight 1.12
+Set Width 1000
+Set Height 680
+Set Padding 24
+Set Margin 20
 Set MarginFill "#050708"
 Set BorderRadius 16
 Set WindowBar "Rings"

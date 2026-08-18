@@ -4,12 +4,14 @@ Require claude
 Require jq
 
 Set Shell "bash"
-Set FontFamily "JetBrains Mono"
-Set FontSize 20
-Set Width 1120
-Set Height 500
-Set Padding 28
-Set Margin 24
+Set FontFamily "Menlo"
+Set FontSize 18
+Set LetterSpacing 0
+Set LineHeight 1.15
+Set Width 1180
+Set Height 360
+Set Padding 24
+Set Margin 20
 Set MarginFill "#050708"
 Set BorderRadius 16
 Set WindowBar "Rings"
@@ -20,7 +22,4 @@ Set Theme {"background":"#0a0e10","foreground":"#e2e8eb","cursor":"#f7ba4a","sel
 
 Type "claude auth status --json | jq '{loggedIn, authMethod, apiProvider, subscriptionType}'"
 Enter
-Sleep 5s
-Type "printf '\n✓ official login · ✓ first-party · ✓ Team subscription\n'"
-Enter
-Sleep 5s
+Sleep 8s

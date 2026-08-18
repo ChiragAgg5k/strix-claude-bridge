@@ -38,8 +38,16 @@ On 2026-08-18, the bridge completed a real Team-backed scan against the bundled 
 The live run also exposed two integration bugs—an allowed rate-status event was treated as terminal, and mailbox interruption returned `aborted_tools`. Both now have regression tests and bounded same-process recovery. Exact evidence and limits are in [Live verification](docs/live-verification.md).
 
 <p align="center">
-  <img src="docs/assets/team-status.png" alt="Sanitized official Claude authentication status showing a first-party Team subscription" width="78%">
+  <img src="docs/assets/live-run-receipt.png" alt="Live run receipt: Team-backed root and child scan completed with 19 tool calls, one finding, reports, SARIF, and verified cleanup" width="100%">
 </p>
+
+<details>
+<summary>Sanitized official Team login check</summary>
+<br>
+<p align="center">
+  <img src="docs/assets/team-status.png" alt="Official Claude authentication status showing a first-party Team subscription with identity fields omitted" width="84%">
+</p>
+</details>
 
 ## See the pipeline run
 

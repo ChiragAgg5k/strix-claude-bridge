@@ -1,0 +1,100 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1400" height="620" viewBox="0 0 1400 620" role="img" aria-labelledby="title desc">
+  <title id="title">Live Strix Claude Bridge run receipt</title>
+  <desc id="desc">A successful Team-backed root and child Strix scan completed with 19 tool calls, one finding, reports, SARIF, and verified sandbox cleanup.</desc>
+  <defs>
+    <pattern id="microgrid" width="20" height="20" patternUnits="userSpaceOnUse">
+      <path d="M20 0H0V20" fill="none" stroke="#172125" stroke-width="1"/>
+    </pattern>
+    <filter id="softGlow" x="-50%" y="-50%" width="200%" height="200%">
+      <feGaussianBlur stdDeviation="4" result="b"/>
+      <feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge>
+    </filter>
+  </defs>
+
+  <rect width="1400" height="620" rx="20" fill="#090d0f"/>
+  <rect width="1400" height="620" rx="20" fill="url(#microgrid)" opacity=".72"/>
+  <rect x="1" y="1" width="1398" height="618" rx="19" fill="none" stroke="#28343a" stroke-width="2"/>
+
+  <g font-family="Menlo, SFMono-Regular, Consolas, monospace">
+    <text x="56" y="58" fill="#f7ba4a" font-size="14" font-weight="700" letter-spacing="2.5">LIVE RUN RECEIPT / 2026-08-18</text>
+    <text x="1344" y="58" text-anchor="end" fill="#66757c" font-size="13" letter-spacing="1.4">LIVE-TEAM-E2E-FINAL</text>
+    <line x1="56" y1="82" x2="1344" y2="82" stroke="#2b373c"/>
+
+    <circle cx="72" cy="135" r="8" fill="#6ad78e" filter="url(#softGlow)"/>
+    <text x="96" y="147" fill="#f2f6f7" font-size="50" font-weight="700" letter-spacing="-2">COMPLETED</text>
+    <text x="410" y="145" fill="#6ad78e" font-size="19">EXIT 0</text>
+    <text x="1344" y="140" text-anchor="end" fill="#94a4aa" font-size="15">simulated_inference=false</text>
+
+    <g transform="translate(56 202)">
+      <path d="M230 58H404M640 58H814M1050 58H1168" fill="none" stroke="#44545b" stroke-width="2" stroke-dasharray="6 8"/>
+      <circle cx="317" cy="58" r="4" fill="#4dd6dd"/>
+      <circle cx="727" cy="58" r="4" fill="#f7ba4a"/>
+      <circle cx="1109" cy="58" r="4" fill="#6ad78e"/>
+
+      <g>
+        <path d="M0 0H230V116H0Z" fill="#0f1d21" stroke="#31545c" stroke-width="2"/>
+        <text x="20" y="30" fill="#4dd6dd" font-size="12" letter-spacing="1.8">ROOT0001</text>
+        <text x="20" y="66" fill="#eef3f4" font-size="22" font-weight="700">ROOT AGENT</text>
+        <text x="20" y="94" fill="#82949a" font-size="13">coordinated + finished</text>
+      </g>
+
+      <g transform="translate(404)">
+        <path d="M0 0H236V116H0Z" fill="#191910" stroke="#65542d" stroke-width="2"/>
+        <text x="20" y="30" fill="#f7ba4a" font-size="12" letter-spacing="1.8">AGENT002</text>
+        <text x="20" y="66" fill="#eef3f4" font-size="22" font-weight="700">VALIDATOR</text>
+        <text x="20" y="94" fill="#9b927c" font-size="13">confirmed CWE-22</text>
+      </g>
+
+      <g transform="translate(814)">
+        <path d="M0 0H236V116H0Z" fill="#111e16" stroke="#345b40" stroke-width="2"/>
+        <text x="20" y="30" fill="#6ad78e" font-size="12" letter-spacing="1.8">STRIX RUNTIME</text>
+        <text x="20" y="66" fill="#eef3f4" font-size="22" font-weight="700">19 TOOLS</text>
+        <text x="20" y="94" fill="#829a88" font-size="13">19 results settled</text>
+      </g>
+
+      <g transform="translate(1168)">
+        <path d="M0 0H120V116H0Z" fill="#111e16" stroke="#345b40" stroke-width="2"/>
+        <text x="60" y="40" text-anchor="middle" fill="#6ad78e" font-size="12" letter-spacing="1.5">FINDINGS</text>
+        <text x="60" y="86" text-anchor="middle" fill="#f2f6f7" font-size="42" font-weight="700">1</text>
+      </g>
+    </g>
+
+    <g transform="translate(56 374)">
+      <text x="0" y="0" fill="#64747b" font-size="12" letter-spacing="1.8">OUTPUT BUS</text>
+      <line x1="0" y1="20" x2="1288" y2="20" stroke="#2b373c"/>
+      <g transform="translate(0 48)" font-size="14">
+        <text x="0" y="0" fill="#6ad78e">✓</text><text x="28" y="0" fill="#dce4e7">penetration_test_report.md</text>
+        <text x="330" y="0" fill="#6ad78e">✓</text><text x="358" y="0" fill="#dce4e7">findings.sarif</text>
+        <text x="610" y="0" fill="#6ad78e">✓</text><text x="638" y="0" fill="#dce4e7">vulnerabilities.json</text>
+        <text x="930" y="0" fill="#6ad78e">✓</text><text x="958" y="0" fill="#dce4e7">vulnerabilities.csv</text>
+      </g>
+    </g>
+
+    <g transform="translate(56 478)">
+      <rect width="1288" height="82" fill="#0c1316" stroke="#263238"/>
+      <g transform="translate(24 24)">
+        <text fill="#66777e" font-size="11" letter-spacing="1.3">AUTH MODE</text>
+        <text y="31" fill="#e2e8eb" font-size="14">claude_subscription</text>
+      </g>
+      <g transform="translate(300 24)">
+        <text fill="#66777e" font-size="11" letter-spacing="1.3">RATE FRAMES</text>
+        <text y="31" fill="#e2e8eb" font-size="14">3 / allowed</text>
+      </g>
+      <g transform="translate(535 24)">
+        <text fill="#66777e" font-size="11" letter-spacing="1.3">RAW SESSION KEYS</text>
+        <text y="31" fill="#6ad78e" font-size="14">0 / omitted</text>
+      </g>
+      <g transform="translate(830 24)">
+        <text fill="#66777e" font-size="11" letter-spacing="1.3">SANDBOX</text>
+        <text y="31" fill="#6ad78e" font-size="14">deletion verified</text>
+      </g>
+      <g transform="translate(1080 24)">
+        <text fill="#66777e" font-size="11" letter-spacing="1.3">COST RECORD</text>
+        <text y="31" fill="#e2e8eb" font-size="14">$0 / subscription</text>
+      </g>
+    </g>
+
+    <text x="56" y="597" fill="#526168" font-size="11">AUTHORIZED DISPOSABLE FIXTURE · OFFICIAL FIRST-PARTY TEAM LOGIN · IDENTITY WITHHELD</text>
+    <text x="1344" y="597" text-anchor="end" fill="#526168" font-size="11">TECHNICAL EVIDENCE ≠ PUBLIC DISTRIBUTION APPROVAL</text>
+  </g>
+</svg>

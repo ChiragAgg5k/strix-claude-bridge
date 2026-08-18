@@ -32,7 +32,15 @@ def render(row: dict[str, Any], call_counts: dict[str, int]) -> None:
     agent = str(row.get("agent_id") or "")
     data = payload(row)
 
-    if kind == "scan_started":
+    if kind == "sandbox_started":
+        line("◆", "Disposable sandbox started", str(data.get("image", "Docker")), color=CYAN)
+    elif kind == "sandbox_result":
+        stdout = str(data.get("stdout") or "").strip()
+        detail = f"exit={data.get('exit_code')} · output={stdout or 'empty'}"
+        line("✓", "Sandbox command completed", detail, color=GREEN)
+    elif kind == "sandbox_closed":
+        line("✓", "Disposable sandbox removed", color=GREEN)
+    elif kind == "scan_started":
         mode = "credential-free demo" if data.get("simulated_inference") else "live inference"
         line("◆", "Strix scan started", f"Claude Agent SDK · {mode}", color=CYAN)
     elif event == "sandbox_ready":
