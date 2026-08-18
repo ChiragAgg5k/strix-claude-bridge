@@ -238,6 +238,8 @@ async def test_simulated_root_child_scan_is_concurrent_and_persists_reports(
         simulated_inference=True,
     )
 
+    from strix.interface.viewer.transcript import build_run_state
+
     run_dir = tmp_path / "strix_runs" / "multi-agent"
     sessions = json.loads(
         (run_dir / ".state" / "claude-bridge" / "claude-sessions.json").read_text()
@@ -269,10 +271,15 @@ async def test_simulated_root_child_scan_is_concurrent_and_persists_reports(
     assert all(item["model"] is None for item in agents.values())
     assert (run_dir / "findings.sarif").is_file()
     assert (run_dir / "penetration_test_report.md").is_file()
+    assert (run_dir / ".state" / "agents.json").is_file()
+    assert (run_dir / ".state" / "agents.db").is_file()
     assert run_dir.stat().st_mode & 0o777 == 0o700
     assert (run_dir / "findings.sarif").stat().st_mode & 0o777 == 0o600
     transcript = (run_dir / ".state" / "claude-bridge" / "claude-events.jsonl").read_text()
     assert "resume_capability" not in transcript
+    run_state = build_run_state(run_dir)
+    assert {agent["id"] for agent in run_state["agents"]} == {"root0001", "agent002"}
+    assert any(event["type"] == "tool" for event in run_state["events"])
     assert len(sandbox_client.deleted) == 1
 
 

@@ -69,6 +69,25 @@ def test_scan_has_finite_default_agent_tool_budget() -> None:
     assert args.max_tool_calls_per_agent == 500
 
 
+def test_view_and_export_commands_parse() -> None:
+    args = build_parser().parse_args(["view", "sample-run", "--port", "4310", "--no-open"])
+    assert args.operation == "view"
+    assert args.run == "sample-run"
+    assert args.port == 4310
+    assert args.no_open is True
+
+    args = build_parser().parse_args(["export-pdf", "sample-run", "--output", "out.pdf"])
+    assert args.operation == "export-pdf"
+    assert args.run == "sample-run"
+    assert args.output == "out.pdf"
+    assert args.encrypt is False
+
+    args = build_parser().parse_args(["export-html", "sample-run", "--output", "out.html"])
+    assert args.operation == "export-html"
+    assert args.run == "sample-run"
+    assert args.output == "out.html"
+
+
 def test_live_scan_requires_authorization(capsys) -> None:
     exit_code = main(["scan", "--experimental", "--target", "."])
 
@@ -114,6 +133,20 @@ def test_known_bridge_state_errors_are_actionable(monkeypatch, capsys) -> None:
     assert "checkpoint model does not match" in capsys.readouterr().out
     assert main(command) == 2
     assert "cumulative provider turn limit is exhausted" in capsys.readouterr().out
+
+
+def test_view_dispatches_through_cli_wrapper(monkeypatch) -> None:
+    called = {}
+
+    def fake_view(args: object) -> int:
+        called["operation"] = getattr(args, "operation", None)
+        called["run"] = getattr(args, "run", None)
+        return 0
+
+    monkeypatch.setattr(cli, "_view", fake_view)
+
+    assert main(["view", "sample-run", "--no-open"]) == 0
+    assert called == {"operation": "view", "run": "sample-run"}
 
 
 def test_terminal_failure_returns_nonzero_without_error_text(monkeypatch, capsys) -> None:

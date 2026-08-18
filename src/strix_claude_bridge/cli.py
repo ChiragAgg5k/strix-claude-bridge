@@ -100,6 +100,25 @@ def build_parser() -> argparse.ArgumentParser:
         action="store_true",
         help="include best-effort-redacted transcript/tool payloads in the bridge JSONL",
     )
+
+    view = subparsers.add_parser("view", help="open the upstream Strix local viewer for a run")
+    view.add_argument("run", nargs="?", default=None)
+    view.add_argument("--port", type=int, default=0)
+    view.add_argument("--host", default="127.0.0.1")
+    view.add_argument("--no-open", action="store_true")
+
+    export_pdf = subparsers.add_parser(
+        "export-pdf", help="export a run's report as PDF via upstream Strix renderer"
+    )
+    export_pdf.add_argument("run", nargs="?", default=None)
+    export_pdf.add_argument("--output")
+    export_pdf.add_argument("--encrypt", action="store_true")
+
+    export_html = subparsers.add_parser(
+        "export-html", help="export a run's report as a standalone HTML artifact"
+    )
+    export_html.add_argument("run", nargs="?", default=None)
+    export_html.add_argument("--output")
     return parser
 
 
@@ -334,6 +353,51 @@ async def _scan(args: argparse.Namespace, writer: JsonlEventWriter) -> int:
     return 0
 
 
+def _view(args: argparse.Namespace) -> int:
+    from strix.interface.viewer.cli import run_view
+
+    argv: list[str] = []
+    if args.run:
+        argv.append(args.run)
+    if args.port:
+        argv.extend(["--port", str(args.port)])
+    if args.host != "127.0.0.1":
+        argv.extend(["--host", args.host])
+    if args.no_open:
+        argv.append("--no-open")
+    try:
+        run_view(argv)
+    except SystemExit as exc:
+        code = exc.code
+        return code if isinstance(code, int) else 1
+    return 0
+
+
+async def _export_pdf(args: argparse.Namespace, writer: JsonlEventWriter) -> int:
+    from strix_claude_bridge.export import export_pdf
+
+    path, password = export_pdf(args.run, output=args.output, encrypt=args.encrypt)
+    await writer.emit(
+        "export_completed",
+        {
+            "format": "pdf",
+            "path": str(path),
+            "encrypted": bool(password),
+        },
+    )
+    if password is not None:
+        print(f"PDF password: {password}")
+    return 0
+
+
+async def _export_html(args: argparse.Namespace, writer: JsonlEventWriter) -> int:
+    from strix_claude_bridge.export import export_html
+
+    path = export_html(args.run, output=args.output)
+    await writer.emit("export_completed", {"format": "html", "path": str(path)})
+    return 0
+
+
 async def _run(args: argparse.Namespace) -> int:
     writer = JsonlEventWriter()
     try:
@@ -341,7 +405,13 @@ async def _run(args: argparse.Namespace) -> int:
             return await _sandbox_probe(args, writer)
         if args.operation == "live-probe":
             return await _live_probe(args, writer)
-        return await _scan(args, writer)
+        if args.operation == "scan":
+            return await _scan(args, writer)
+        if args.operation == "view":
+            return _view(args)
+        if args.operation == "export-pdf":
+            return await _export_pdf(args, writer)
+        return await _export_html(args, writer)
     except AuthenticationModeError as exc:
         await writer.emit("authentication_error", {"message": str(exc)})
         return 2

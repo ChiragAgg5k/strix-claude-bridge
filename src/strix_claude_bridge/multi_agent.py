@@ -5,7 +5,10 @@ from __future__ import annotations
 import asyncio
 import hashlib
 import io
+import json
+import os
 import sys
+import tempfile
 from collections.abc import Awaitable, Callable, Mapping, Sequence
 from dataclasses import dataclass
 from pathlib import Path
@@ -37,6 +40,7 @@ from strix_claude_bridge.strix_integration import (
     build_claude_session_spec,
     verify_runtime_compatibility,
 )
+from strix_claude_bridge.viewer_state import ViewerStateStore
 
 
 @dataclass(frozen=True)
@@ -76,6 +80,16 @@ class MultiAgentScanConfig:
 class _DurableCoordinatorMixin:
     """Snapshot mailbox audit metadata before requesting an SDK interruption."""
 
+    def set_snapshot_path(self, path: Path) -> None:  # type: ignore[override]
+        super().set_snapshot_path(path)  # type: ignore[misc]
+        self._snapshot_paths = [path]
+
+    def set_secondary_snapshot_path(self, path: Path) -> None:
+        paths = list(getattr(self, "_snapshot_paths", []))
+        if path not in paths:
+            paths.append(path)
+        self._snapshot_paths = paths
+
     async def snapshot(self) -> dict[str, Any]:
         data = await super().snapshot()  # type: ignore[misc]
         metadata = data.get("metadata", {})
@@ -101,6 +115,31 @@ class _DurableCoordinatorMixin:
         }
         return data
 
+    async def _maybe_snapshot(self) -> None:  # type: ignore[override]
+        paths = [path for path in getattr(self, "_snapshot_paths", []) if path is not None]
+        if not paths:
+            return
+        try:
+            data = await self.snapshot()
+            payload = json.dumps(data, ensure_ascii=False, default=str)
+            for path in paths:
+                path.parent.mkdir(parents=True, exist_ok=True)
+                with tempfile.NamedTemporaryFile(
+                    mode="w",
+                    encoding="utf-8",
+                    dir=str(path.parent),
+                    prefix=f".{path.name}.",
+                    suffix=".tmp",
+                    delete=False,
+                ) as tmp:
+                    tmp.write(payload)
+                    tmp_path = Path(tmp.name)
+                os.chmod(tmp_path, 0o600)
+                os.replace(tmp_path, path)
+                os.chmod(path, 0o600)
+        except Exception:
+            return
+
     async def send(
         self, target_agent_id: str, message: dict[str, Any], *, interrupt: bool = True
     ) -> bool:
@@ -114,16 +153,6 @@ class _DurableCoordinatorMixin:
         if stream is not None and enabled:
             stream.cancel(mode="immediate")
         return delivered
-
-
-class _MailboxSessionMirror:
-    """Minimal in-memory Strix Session sink; graph files are diagnostics only."""
-
-    def __init__(self) -> None:
-        self.items: list[Any] = []
-
-    async def add_items(self, items: list[Any]) -> None:
-        self.items.extend(items)
 
 
 class _SessionInterruptHandle:
@@ -243,6 +272,7 @@ class MultiAgentScanRunner:
         self.report_state: Any = None
         self.coordinator: Any = None
         self.store: RunStateStore | None = None
+        self.viewer_state: ViewerStateStore | None = None
         self.journal: ToolInvocationJournal | None = None
         self.root_id = "root0001"
         self._agent_counter = 1
@@ -251,6 +281,8 @@ class MultiAgentScanRunner:
     async def _emit(self, event: BackendEvent) -> None:
         assert self.store is not None
         self.store.append_event(event)
+        if self.viewer_state is not None:
+            await self.viewer_state.append_backend_event(event)
         if self.event_sink is not None:
             await self.event_sink(event)
 
@@ -311,28 +343,15 @@ class MultiAgentScanRunner:
         }
 
     async def _mailbox_input(self, agent_id: str) -> tuple[str | None, int]:
-        async with self.coordinator._lock:
-            runtime = self.coordinator.runtimes[agent_id]
-            queued = [dict(item) for item in runtime.mailbox]
-        if not queued:
+        count, items = await self.coordinator.consume_pending(agent_id, include_items=True)
+        if count <= 0:
             return None, 0
-        parts = []
-        for message in queued:
-            sender = str(message.get("from", "unknown"))
-            sender_name = self.coordinator.names.get(sender, sender)
-            parts.append(
-                f"[Message from {sender_name} ({sender}) | "
-                f"type={message.get('type', 'information')} | "
-                f"priority={message.get('priority', 'normal')}]\n{message.get('content', '')}"
-            )
-        return "\n\n".join(parts), len(queued)
-
-    async def _ack_mailbox(self, agent_id: str, count: int) -> None:
-        async with self.coordinator._lock:
-            runtime = self.coordinator.runtimes[agent_id]
-            del runtime.mailbox[:count]
-            self.coordinator.pending_counts[agent_id] = len(runtime.mailbox)
-        await self.coordinator._maybe_snapshot()
+        parts = [
+            str(item.get("content", ""))
+            for item in items
+            if isinstance(item, dict) and str(item.get("content", "")).strip()
+        ]
+        return ("\n\n".join(parts) if parts else None), count
 
     def _checkpoint(self, runtime: _AgentRuntime, spec: Any, result: Any) -> SessionCheckpoint:
         schemas = {
@@ -397,10 +416,13 @@ class MultiAgentScanRunner:
             session = self.backend.create_session(spec)
             runtime.session = session
             handle = _SessionInterruptHandle(session)
+            assert self.viewer_state is not None
+            await self.viewer_state.seed_agent(runtime.agent_id, runtime.task_text)
+            viewer_session = self.viewer_state.session_for(runtime.agent_id)
             await self.coordinator.attach_stream(runtime.agent_id, handle)
             await self.coordinator.attach_runtime(
                 runtime.agent_id,
-                session=_MailboxSessionMirror(),
+                session=viewer_session,
                 interrupt_on_message=True,
             )
             initial = (
@@ -462,7 +484,7 @@ class MultiAgentScanRunner:
                 if current_status == "stopped":
                     status = "stopped"
                     return
-                mailbox_text, count = await self._mailbox_input(runtime.agent_id)
+                mailbox_text, _count = await self._mailbox_input(runtime.agent_id)
                 mailbox_wait_interrupted = handle.consume_mailbox_wait_interrupt()
                 if result.is_error:
                     reason = result.terminal_reason.casefold()
@@ -487,7 +509,6 @@ class MultiAgentScanRunner:
                     current_history.append({"role": "user", "content": mailbox_text})
                     async with self.semaphore:
                         await session.continue_with(mailbox_text)
-                    await self._ack_mailbox(runtime.agent_id, count)
                     recovery = 0
                     continue
                 if runtime.parent_id is None and any(
@@ -495,12 +516,11 @@ class MultiAgentScanRunner:
                     for item in self.runtimes.values()
                 ):
                     await self.coordinator.wait_for_message(runtime.agent_id, timeout=1.0)
-                    mailbox_text, count = await self._mailbox_input(runtime.agent_id)
+                    mailbox_text, _count = await self._mailbox_input(runtime.agent_id)
                     if mailbox_text:
                         current_history.append({"role": "user", "content": mailbox_text})
                         async with self.semaphore:
                             await session.continue_with(mailbox_text)
-                        await self._ack_mailbox(runtime.agent_id, count)
                         continue
                 recovery += 1
                 if recovery > self.config.recovery_turns:
@@ -516,6 +536,8 @@ class MultiAgentScanRunner:
                     else "Complete the assigned subtask and call agent_finish exactly once."
                 )
                 current_history.append({"role": "user", "content": nudge})
+                if self.viewer_state is not None:
+                    await self.viewer_state.append_user_text(runtime.agent_id, nudge)
                 async with self.semaphore:
                     await session.continue_with(nudge)
         except asyncio.CancelledError:
@@ -590,6 +612,7 @@ class MultiAgentScanRunner:
                 "run directory already exists; provide an explicit resume token"
             )
         self.store = RunStateStore(state_dir / "claude-bridge")
+        self.viewer_state = ViewerStateStore(state_dir)
         if resume:
             self.store.open_resume(str(self.config.resume_token))
         else:
@@ -626,7 +649,8 @@ class MultiAgentScanRunner:
                 "BridgeAgentCoordinator", (_DurableCoordinatorMixin, AgentCoordinator), {}
             )
             self.coordinator = Coordinator()
-            self.coordinator.set_snapshot_path(self.store.state_dir / "agent-graph.json")
+            self.coordinator.set_snapshot_path(state_dir / "agents.json")
+            self.coordinator.set_secondary_snapshot_path(self.store.state_dir / "agent-graph.json")
             self.bundle = await _create_strix_bundle(
                 session_manager,
                 self.config.run_name,
@@ -779,6 +803,8 @@ class MultiAgentScanRunner:
                     )
             secure_run_tree(run_dir)
             tool_state.__exit__(None, None, None)
+            if self.viewer_state is not None:
+                self.viewer_state.close()
             set_global_report_state(previous_report)
         if first_error is not None:
             raise first_error
