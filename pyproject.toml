@@ -48,7 +48,6 @@ include = [
   "/src",
   "/tests",
   "/README.md",
-  "/COMPATIBILITY.md",
   "/docs",
   "/fixtures",
   "/scripts",

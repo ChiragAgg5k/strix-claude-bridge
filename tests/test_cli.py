@@ -1,28 +1,23 @@
-from strix_claude_bridge import cli, probe
+from strix_claude_bridge import cli
 from strix_claude_bridge.auth import AuthenticationModeError
 from strix_claude_bridge.backend import BackendStateError, SessionCompatibilityError
 from strix_claude_bridge.cli import build_parser, main
 
 
-def test_sandbox_command_does_not_overwrite_subcommand() -> None:
-    args = build_parser().parse_args(["sandbox-probe", "--command", "printf ok"])
+def test_probe_commands_are_not_exposed() -> None:
+    operations = next(
+        action for action in build_parser()._actions if action.dest == "operation"
+    ).choices
 
-    assert args.operation == "sandbox-probe"
-    assert args.sandbox_command == "printf ok"
-
-
-def test_live_probe_requires_explicit_authorized_use(capsys) -> None:
-    exit_code = main(["live-probe", "--prompt", "safe"])
-
-    assert exit_code == 2
-    assert '"kind":"configuration_error"' in capsys.readouterr().out
+    assert "sandbox-probe" not in operations
+    assert "live-probe" not in operations
 
 
-def test_scan_is_gated_as_experimental(capsys) -> None:
-    exit_code = main(["scan", "--target", ".", "--dry-run"])
+def test_scan_dry_run_still_validates_limits(capsys) -> None:
+    exit_code = main(["scan", "--target", ".", "--dry-run", "--max-turns", "0"])
 
     assert exit_code == 2
-    assert "requires --experimental" in capsys.readouterr().out
+    assert "--max-turns must be in [1, 1000]" in capsys.readouterr().out
 
 
 def test_multi_agent_limits_and_disabled_resume_are_validated_before_side_effects(
@@ -31,7 +26,6 @@ def test_multi_agent_limits_and_disabled_resume_are_validated_before_side_effect
     exit_code = main(
         [
             "scan",
-            "--experimental",
             "--dry-run",
             "--target",
             ".",
@@ -45,7 +39,7 @@ def test_multi_agent_limits_and_disabled_resume_are_validated_before_side_effect
     assert "max-concurrent-agents" in capsys.readouterr().out
 
     exit_code = main(
-        ["scan", "--experimental", "--dry-run", "--target", ".", "--resume-token", "x"]
+        ["scan", "--dry-run", "--target", ".", "--resume-token", "x"]
     )
     assert exit_code == 2
     assert "resume-token is disabled" in capsys.readouterr().out
@@ -58,7 +52,7 @@ def test_multi_agent_limits_and_disabled_resume_are_validated_before_side_effect
         raise AssertionError("empty resume token must be rejected before target preparation")
 
     monkeypatch.setattr(cli, "_prepare_scan_inputs", prepare)
-    exit_code = main(["scan", "--experimental", "--dry-run", "--target", ".", "--resume-token", ""])
+    exit_code = main(["scan", "--dry-run", "--target", ".", "--resume-token", ""])
     assert exit_code == 2
     assert prepared is False
     assert "resume-token is disabled" in capsys.readouterr().out
@@ -88,13 +82,6 @@ def test_view_and_export_commands_parse() -> None:
     assert args.output == "out.html"
 
 
-def test_live_scan_requires_authorization(capsys) -> None:
-    exit_code = main(["scan", "--experimental", "--target", "."])
-
-    assert exit_code == 2
-    assert "requires --authorized-use" in capsys.readouterr().out
-
-
 def test_live_scan_validates_auth_before_target_side_effects(monkeypatch, capsys) -> None:
     prepared = False
 
@@ -109,9 +96,7 @@ def test_live_scan_validates_auth_before_target_side_effects(monkeypatch, capsys
     monkeypatch.setattr(cli, "_prepare_scan_inputs", prepare)
     monkeypatch.setattr(cli, "require_subscription_environment", reject_auth)
 
-    exit_code = main(
-        ["scan", "--experimental", "--authorized-use", "--target", "https://example.test"]
-    )
+    exit_code = main(["scan", "--target", "https://example.test"])
 
     assert exit_code == 2
     assert prepared is False
@@ -128,7 +113,7 @@ def test_known_bridge_state_errors_are_actionable(monkeypatch, capsys) -> None:
         raise errors.pop(0)
 
     monkeypatch.setattr(cli, "_scan", fail_scan)
-    command = ["scan", "--experimental", "--dry-run", "--target", "."]
+    command = ["scan", "--dry-run", "--target", "."]
     assert main(command) == 2
     assert "checkpoint model does not match" in capsys.readouterr().out
     assert main(command) == 2
@@ -147,28 +132,3 @@ def test_view_dispatches_through_cli_wrapper(monkeypatch) -> None:
 
     assert main(["view", "sample-run", "--no-open"]) == 0
     assert called == {"operation": "view", "run": "sample-run"}
-
-
-def test_terminal_failure_returns_nonzero_without_error_text(monkeypatch, capsys) -> None:
-    async def fail_probe(**_kwargs: object) -> None:
-        raise probe.ProbeTerminalError("sensitive provider text")
-
-    for name in (
-        "ANTHROPIC_API_KEY",
-        "ANTHROPIC_AUTH_TOKEN",
-        "ANTHROPIC_BASE_URL",
-        "ANTHROPIC_CUSTOM_HEADERS",
-        "AWS_BEARER_TOKEN_BEDROCK",
-        "CLAUDE_CODE_USE_BEDROCK",
-        "CLAUDE_CODE_USE_VERTEX",
-        "CLAUDE_CODE_USE_FOUNDRY",
-    ):
-        monkeypatch.delenv(name, raising=False)
-    monkeypatch.setattr(probe, "run_live_probe", fail_probe)
-
-    exit_code = main(["live-probe", "--authorized-use", "--prompt", "safe"])
-
-    output = capsys.readouterr().out
-    assert exit_code == 1
-    assert '"error_type":"ProbeTerminalError"' in output
-    assert "sensitive provider text" not in output

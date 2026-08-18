@@ -16,7 +16,7 @@ The email address, organization name, and organization identifier are intentiona
 
 ## Harmless SDK and MCP probe
 
-The documented `live-probe` command ran headlessly with the SDK default model selection and one strict in-process `sandbox_exec` tool. Observed results:
+A one-turn SDK/MCP verification run was executed headlessly with the SDK default model selection and one strict in-process `sandbox_exec` tool. Observed results:
 
 - SDK connected and emitted init/status, streaming, assistant, tool, user, rate-limit, result, and disconnect frames;
 - Claude selected `sandbox_exec` exactly once;

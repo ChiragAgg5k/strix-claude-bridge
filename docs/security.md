@@ -6,7 +6,7 @@ Protected assets include Claude credentials/session IDs, target source and secre
 
 ## Authorization and policy
 
-Live scan requires `--experimental --authorized-use`. This is operator confirmation, not proof. The user owns:
+Live scan remains operator-confirmed only; the bridge does not prove authorization. The user owns:
 
 - target ownership/assessment authorization;
 - approval to transfer selected target data to Anthropic;
@@ -58,7 +58,7 @@ All offensive shell/filesystem actions use bound Strix Docker capabilities. Tool
 
 ## Docker boundaries
 
-The standalone `sandbox-probe` uses no network, dropped capabilities, read-only root, no-new-privileges, PID/CPU/memory limits, no mounts, and no inherited environment. The production Strix Docker/Caido bundle is different: it may require networking, writable bind mounts, `NET_ADMIN`, and `NET_RAW` for pentesting. A live fixture scan confirmed that Strix's `apply_patch` tool can modify the bind-mounted host target. Always scan a disposable clone/worktree/copy. The production bundle is not hostile-code or multi-tenant hardening. Docker daemon/image trust and cleanup during daemon failure remain host responsibilities; release image tags are not digest-pinned.
+The production Strix Docker/Caido bundle may require networking, writable bind mounts, `NET_ADMIN`, and `NET_RAW` for pentesting. A live fixture scan confirmed that Strix's `apply_patch` tool can modify the bind-mounted host target. Always scan a disposable clone/worktree/copy. The production bundle is not hostile-code or multi-tenant hardening. Docker daemon/image trust and cleanup during daemon failure remain host responsibilities; release image tags are not digest-pinned.
 
 ## Logging, journal, and reports
 

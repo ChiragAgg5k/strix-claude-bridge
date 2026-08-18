@@ -18,7 +18,6 @@ from strix_claude_bridge.strix_integration import (
 ROOT = Path(__file__).parents[1]
 REQUIRED_DOCS = {
     Path("README.md"),
-    Path("COMPATIBILITY.md"),
     Path("docs/architecture.md"),
     Path("docs/ownership-boundaries.md"),
     Path("docs/implementation-status.md"),
@@ -58,27 +57,25 @@ def test_required_documentation_and_internal_links_exist() -> None:
 
 def test_cli_help_and_readme_commands_are_consistent() -> None:
     parser = build_parser()
-    scan_parser = next(action for action in parser._actions if action.dest == "operation").choices[
-        "scan"
-    ]
+    operations = next(action for action in parser._actions if action.dest == "operation").choices
+    scan_parser = operations["scan"]
     help_text = scan_parser.format_help()
     assert "--resume-token" in help_text
     assert "disabled safety guard" in help_text
+    assert "sandbox-probe" not in operations
+    assert "live-probe" not in operations
     readme = (ROOT / "README.md").read_text()
     for text in (
-        "uv sync --extra test --extra strix --locked",
+        "uv sync --extra strix --locked",
         "strix-claude-bridge scan",
-        "--experimental --authorized-use",
-        "--experimental --dry-run",
-        "strix-claude-bridge sandbox-probe",
-        "strix-claude-bridge live-probe --authorized-use",
-        "--max-tool-calls-per-agent",
+        "strix-claude-bridge view",
+        "subscriptionType",
     ):
         assert text in readme
+    for removed in ("sandbox-probe", "live-probe"):
+        assert removed not in readme
     scan_options = {option for action in scan_parser._actions for option in action.option_strings}
     for option in (
-        "--experimental",
-        "--authorized-use",
         "--target",
         "--scan-mode",
         "--run-name",
@@ -92,10 +89,9 @@ def test_cli_help_and_readme_commands_are_consistent() -> None:
 
 
 def test_safe_live_commands_list_every_rejected_auth_override() -> None:
-    for relative in ("README.md", "docs/operations.md"):
-        text = (ROOT / relative).read_text()
-        for variable in _AUTH_OVERRIDE_VARIABLES:
-            assert variable in text, f"safe command in {relative} omits {variable}"
+    text = (ROOT / "docs/operations.md").read_text()
+    for variable in _AUTH_OVERRIDE_VARIABLES:
+        assert variable in text, f"safe command in docs/operations.md omits {variable}"
 
 
 def test_version_pins_agree_across_code_metadata_docs_and_inventory() -> None:
@@ -117,7 +113,6 @@ def test_version_pins_agree_across_code_metadata_docs_and_inventory() -> None:
         "target_type": "local_code",
     }
     for relative in (
-        "COMPATIBILITY.md",
         "docs/architecture.md",
         "docs/upstream-compatibility.md",
     ):

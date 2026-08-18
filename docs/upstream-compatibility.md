@@ -11,7 +11,7 @@
 | Claude Agent SDK | `claude-agent-sdk==0.2.139` | runtime metadata equality |
 | Python | package `>=3.10`; Strix extra `>=3.12` | markers/metadata; validation currently Python 3.13 only |
 
-Pins appear in `pyproject.toml`, `uv.lock`, `src/strix_claude_bridge/strix_integration.py`, `COMPATIBILITY.md`, and the generated tool inventory. Documentation tests reject drift.
+Pins appear in `pyproject.toml`, `uv.lock`, `src/strix_claude_bridge/strix_integration.py`, and the generated tool inventory. Documentation tests reject drift.
 
 ## Unchanged upstream APIs and layers
 

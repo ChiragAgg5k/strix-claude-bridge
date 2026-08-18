@@ -9,12 +9,6 @@ case "${1:-}" in
   version)
     "${BRIDGE[@]}" --version
     ;;
-  sandbox)
-    "${BRIDGE[@]}" sandbox-probe \
-      --image alpine:3.21 \
-      --command 'echo sandbox-ok' \
-      | uv --project "$REPO" run python "$REPO/scripts/readme_demo_stream.py"
-    ;;
   scan)
     demo_dir="$(mktemp -d "${TMPDIR:-/tmp}/strix-claude-readme.XXXXXX")"
     trap 'rm -rf "$demo_dir"' EXIT
@@ -31,7 +25,7 @@ case "${1:-}" in
       | uv --project "$REPO" run python "$REPO/scripts/readme_demo_stream.py"
     ;;
   *)
-    printf 'usage: %s {version|sandbox|scan}\n' "$0" >&2
+    printf 'usage: %s {version|scan}\n' "$0" >&2
     exit 2
     ;;
 esac

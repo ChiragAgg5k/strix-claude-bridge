@@ -29,7 +29,6 @@ def test_real_strix_sandbox_dry_run_creates_report_artifacts(
     exit_code = main(
         [
             "scan",
-            "--experimental",
             "--dry-run",
             "--target",
             str(fixture),

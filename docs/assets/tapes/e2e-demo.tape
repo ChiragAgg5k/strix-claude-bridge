@@ -25,10 +25,6 @@ Type "./scripts/readme_demo.sh version"
 Enter
 Sleep 2s
 
-Type "./scripts/readme_demo.sh sandbox"
-Enter
-Sleep 4s
-
 Type "./scripts/readme_demo.sh scan"
 Enter
 Sleep 45s

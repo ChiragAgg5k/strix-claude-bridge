@@ -16,7 +16,6 @@ unset ANTHROPIC_API_KEY ANTHROPIC_AUTH_TOKEN ANTHROPIC_BASE_URL \
   CLAUDE_CODE_USE_BEDROCK CLAUDE_CODE_USE_VERTEX CLAUDE_CODE_USE_FOUNDRY
 cp -R ./authorized-app /tmp/authorized-app-scan
 uv run --extra strix strix-claude-bridge scan \
-  --experimental --authorized-use \
   --target /tmp/authorized-app-scan --run-name authorized-run \
   --scan-mode quick --max-turns 100 --max-runtime 3600 \
   --max-concurrent-agents 2 --max-agents 8 \

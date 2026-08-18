@@ -15,61 +15,32 @@ from strix_claude_bridge.events import JsonlEventWriter
 from strix_claude_bridge.single_agent import SingleAgentScanError
 from strix_claude_bridge.strix_integration import IntegrationCompatibilityError
 
-_DEFAULT_IMAGE = "alpine:3.21"
-
 
 def build_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(
         prog="strix-claude-bridge",
         description="Experimental local Strix execution through the official Claude Agent SDK.",
         epilog=(
-            "AUTHORIZED USE ONLY. The live probe requires an existing supported local Claude "
+            "AUTHORIZED USE ONLY. Live execution requires an existing supported local Claude "
             "login and never implements or inspects login credentials."
         ),
     )
     parser.add_argument("--version", action="version", version="%(prog)s 0.1.0")
     subparsers = parser.add_subparsers(dest="operation", required=True)
 
-    sandbox = subparsers.add_parser(
-        "sandbox-probe", help="run a credential-free command in a disposable container"
-    )
-    sandbox.add_argument("--image", default=_DEFAULT_IMAGE, help="explicit Docker image reference")
-    sandbox.add_argument("--command", dest="sandbox_command", default='printf "sandbox-ok\\n"')
-    sandbox.add_argument("--timeout", type=float, default=10.0, metavar="SECONDS")
-
-    live = subparsers.add_parser(
-        "live-probe",
-        help="OPT-IN: use the caller's existing SDK-supported local subscription login",
-    )
-    live.add_argument(
-        "--authorized-use",
-        action="store_true",
-        help="confirm the target/use is authorized and the authentication use is supported",
-    )
-    live.add_argument("--image", default=_DEFAULT_IMAGE, help="explicit Docker image reference")
-    live.add_argument("--prompt", required=True, help="non-secret prompt for the one-turn probe")
-    live.add_argument("--model", help="optional SDK model selector; default is SDK/account choice")
-    live.add_argument("--command-timeout", type=float, default=30.0, metavar="SECONDS")
-    live.add_argument("--max-turns", type=int, default=4)
-    live.add_argument(
-        "--include-sensitive-content",
-        action="store_true",
-        help="diagnostic opt-in: include best-effort-redacted commands/model/tool content in JSONL",
-    )
-
     scan = subparsers.add_parser(
         "scan",
-        help="EXPERIMENTAL: run one real Strix root agent through Claude Agent SDK",
+        help="run one real Strix root agent through Claude Agent SDK",
     )
     scan.add_argument(
         "--experimental",
         action="store_true",
-        help="acknowledge that the single-agent Claude backend is experimental",
+        help=argparse.SUPPRESS,
     )
     scan.add_argument(
         "--authorized-use",
         action="store_true",
-        help="confirm every target is owned or explicitly authorized (required for live inference)",
+        help=argparse.SUPPRESS,
     )
     scan.add_argument("--target", "-t", action="append", required=True)
     scan.add_argument("--instruction", default="")
@@ -122,57 +93,6 @@ def build_parser() -> argparse.ArgumentParser:
     return parser
 
 
-async def _sandbox_probe(args: argparse.Namespace, writer: JsonlEventWriter) -> int:
-    from strix_claude_bridge.sandbox import DockerSandboxExecutor
-
-    executor = DockerSandboxExecutor(args.image, timeout_s=args.timeout)
-    try:
-        async with executor:
-            await writer.emit("sandbox_started", {"image": args.image})
-            result = await executor.exec(args.sandbox_command)
-            await writer.emit(
-                "sandbox_result",
-                {
-                    "exit_code": result.exit_code,
-                    "stdout": result.stdout,
-                    "stderr": result.stderr,
-                    "truncated": result.truncated,
-                },
-            )
-            return 0 if result.exit_code == 0 else 1
-    finally:
-        await executor.close()
-        await writer.emit("sandbox_closed", {"image": args.image})
-
-
-async def _live_probe(args: argparse.Namespace, writer: JsonlEventWriter) -> int:
-    if not args.authorized_use:
-        await writer.emit(
-            "configuration_error",
-            {"message": "live-probe requires --authorized-use"},
-        )
-        return 2
-    if not 1 <= args.max_turns <= 100:
-        await writer.emit("configuration_error", {"message": "--max-turns must be in [1, 100]"})
-        return 2
-    require_subscription_environment()
-    from strix_claude_bridge.probe import ProbeCancelled, run_live_probe
-
-    try:
-        await run_live_probe(
-            prompt=args.prompt,
-            image=args.image,
-            writer=writer,
-            model=args.model,
-            command_timeout_s=args.command_timeout,
-            max_turns=args.max_turns,
-            include_sensitive_content=args.include_sensitive_content,
-        )
-    except ProbeCancelled:
-        return 130
-    return 0
-
-
 def _prepare_scan_inputs(
     args: argparse.Namespace,
 ) -> tuple[dict[str, object], list[dict[str, object]], str]:
@@ -218,12 +138,6 @@ def _prepare_scan_inputs(
 
 
 async def _scan(args: argparse.Namespace, writer: JsonlEventWriter) -> int:
-    if not args.experimental:
-        await writer.emit(
-            "configuration_error",
-            {"message": "scan requires --experimental; the Claude backend is not production-ready"},
-        )
-        return 2
     if not 1 <= args.max_turns <= 1000:
         await writer.emit("configuration_error", {"message": "--max-turns must be in [1, 1000]"})
         return 2
@@ -253,12 +167,6 @@ async def _scan(args: argparse.Namespace, writer: JsonlEventWriter) -> int:
                     "and provider tool-use reconciliation are implemented"
                 )
             },
-        )
-        return 2
-    if not args.dry_run and not args.authorized_use:
-        await writer.emit(
-            "configuration_error",
-            {"message": "live scan requires --authorized-use"},
         )
         return 2
 
@@ -401,10 +309,6 @@ async def _export_html(args: argparse.Namespace, writer: JsonlEventWriter) -> in
 async def _run(args: argparse.Namespace) -> int:
     writer = JsonlEventWriter()
     try:
-        if args.operation == "sandbox-probe":
-            return await _sandbox_probe(args, writer)
-        if args.operation == "live-probe":
-            return await _live_probe(args, writer)
         if args.operation == "scan":
             return await _scan(args, writer)
         if args.operation == "view":
