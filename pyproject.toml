@@ -1,0 +1,72 @@
+[build-system]
+requires = ["hatchling>=1.27,<2"]
+build-backend = "hatchling.build"
+
+[project]
+name = "strix-claude-bridge"
+version = "0.1.0"
+description = "Experimental multi-agent Strix execution through the Claude Agent SDK"
+readme = "README.md"
+requires-python = ">=3.10"
+authors = [{ name = "Strix Claude Bridge contributors" }]
+classifiers = [
+  "Development Status :: 3 - Alpha",
+  "Environment :: Console",
+  "Programming Language :: Python :: 3 :: Only",
+  "Programming Language :: Python :: 3.10",
+  "Programming Language :: Python :: 3.11",
+  "Programming Language :: Python :: 3.12",
+  "Programming Language :: Python :: 3.13",
+  "Topic :: Security",
+]
+dependencies = [
+  "claude-agent-sdk==0.2.139",
+  "docker>=7.1,<8",
+]
+
+[project.optional-dependencies]
+test = [
+  "pytest>=8.3,<10",
+  "pytest-asyncio>=0.25,<2",
+  "ruff==0.16.3",
+]
+strix = [
+  "strix-agent==1.5.3; python_version >= '3.12'",
+  "openai-agents[litellm]==0.19.0; python_version >= '3.12'",
+]
+
+[project.scripts]
+strix-claude-bridge = "strix_claude_bridge.cli:main"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/strix_claude_bridge"]
+core-metadata-version = "2.4"
+
+[tool.hatch.build.targets.sdist]
+core-metadata-version = "2.4"
+include = [
+  "/src",
+  "/tests",
+  "/README.md",
+  "/COMPATIBILITY.md",
+  "/docs",
+  "/fixtures",
+  "/scripts",
+  "/pyproject.toml",
+  "/uv.lock",
+]
+
+[tool.pytest.ini_options]
+addopts = "-ra"
+asyncio_mode = "auto"
+markers = [
+  "docker: opt-in tests requiring a local Docker daemon and image access",
+]
+
+[tool.ruff]
+target-version = "py310"
+line-length = 100
+extend-exclude = [".pi"]
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "UP", "B", "ASYNC", "RUF"]

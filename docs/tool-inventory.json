@@ -1,0 +1,1863 @@
+{
+  "generated_from": {
+    "claude_agent_sdk_version": "0.2.139",
+    "openai_agents_version": "0.19.0",
+    "scan_mode": "quick",
+    "skills": [],
+    "strix_commit": "8ede419dccf6742aa0e0c4fe3e7faf11c471ff9a",
+    "strix_version": "1.5.3",
+    "target_type": "local_code"
+  },
+  "schema_version": 1,
+  "tools": [
+    {
+      "mcp_names": {
+        "child": "mcp__strix_agent002__agent_finish"
+      },
+      "name": "agent_finish",
+      "roles": [
+        "child"
+      ],
+      "schema": {
+        "additionalProperties": false,
+        "properties": {
+          "final_recommendations": {
+            "anyOf": [
+              {
+                "items": {
+                  "type": "string"
+                },
+                "type": "array"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Optional next-step suggestions for the\nparent (e.g., \"prioritize testing X\", \"spawn an agent to\ncover Y\").",
+            "title": "Final Recommendations"
+          },
+          "findings": {
+            "anyOf": [
+              {
+                "items": {
+                  "type": "string"
+                },
+                "type": "array"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Optional bullet list of confirmed observations. For\ncredit-bearing vulnerabilities, file\n``create_vulnerability_report`` first (or\n``create_dependency_report`` for dependency CVEs); this is\nfor narrative.",
+            "title": "Findings"
+          },
+          "report_to_parent": {
+            "default": true,
+            "description": "Whether to deliver the completion report to\nthe parent's inbox. Default ``True``.",
+            "title": "Report To Parent",
+            "type": "boolean"
+          },
+          "result_summary": {
+            "description": "What you accomplished and discovered. Concrete\nand specific (URLs, parameters, payloads that worked).",
+            "title": "Result Summary",
+            "type": "string"
+          },
+          "success": {
+            "default": true,
+            "description": "Whether the assigned subtask was completed\nsuccessfully. Default ``True``.",
+            "title": "Success",
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "result_summary",
+          "findings",
+          "success",
+          "report_to_parent",
+          "final_recommendations"
+        ],
+        "title": "agent_finish_args",
+        "type": "object"
+      },
+      "schema_sha256": "693f9ce033b3db7c60f479bca42fa2c323e054c495dab65da6a01a6819f7350e",
+      "timeout_seconds": 30.0
+    },
+    {
+      "mcp_names": {
+        "child": "mcp__strix_agent002__apply_patch",
+        "root": "mcp__strix_root0001__apply_patch"
+      },
+      "name": "apply_patch",
+      "roles": [
+        "root",
+        "child"
+      ],
+      "schema": {
+        "additionalProperties": false,
+        "properties": {
+          "patch": {
+            "description": "Complete `apply_patch` payload. Follow the tool description exactly.",
+            "type": "string"
+          }
+        },
+        "required": [
+          "patch"
+        ],
+        "type": "object"
+      },
+      "schema_sha256": "dd7544fd921106466723bca35f10ffe791fe12677727885ed9237d996fa714c9",
+      "timeout_seconds": null
+    },
+    {
+      "mcp_names": {
+        "child": "mcp__strix_agent002__create_agent",
+        "root": "mcp__strix_root0001__create_agent"
+      },
+      "name": "create_agent",
+      "roles": [
+        "root",
+        "child"
+      ],
+      "schema": {
+        "additionalProperties": false,
+        "properties": {
+          "inherit_context": {
+            "default": true,
+            "description": "Default ``True``. The child receives the\nparent's input history as background; only set ``False``\nwhen starting a clean-slate task.",
+            "title": "Inherit Context",
+            "type": "boolean"
+          },
+          "name": {
+            "description": "Human-readable child name (used in graph views and\n``send_message_to_agent`` flows).",
+            "title": "Name",
+            "type": "string"
+          },
+          "skills": {
+            "anyOf": [
+              {
+                "items": {
+                  "type": "string"
+                },
+                "type": "array"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "List of skill names (e.g. ``[\"xss\", \"sql_injection\"]``).\nMax 5; prefer 1-3.",
+            "title": "Skills"
+          },
+          "task": {
+            "description": "Specific objective. Be concrete — what to test, what\nsuccess looks like, any constraints.",
+            "title": "Task",
+            "type": "string"
+          }
+        },
+        "required": [
+          "name",
+          "task",
+          "inherit_context",
+          "skills"
+        ],
+        "title": "create_agent_args",
+        "type": "object"
+      },
+      "schema_sha256": "7fde265f04ac480ed16894ef140959c6b9516fb9db7bd211545e0abc9cebbf22",
+      "timeout_seconds": 120.0
+    },
+    {
+      "mcp_names": {
+        "child": "mcp__strix_agent002__create_dependency_report",
+        "root": "mcp__strix_root0001__create_dependency_report"
+      },
+      "name": "create_dependency_report",
+      "roles": [
+        "root",
+        "child"
+      ],
+      "schema": {
+        "properties": {
+          "advisory_cvss": {
+            "description": "**Required.** Published advisory base score\n(0.0-10.0) — read it off the advisory (trivy CVSS / NVD / GHSA).\nSeverity is derived solely from this score, so it must be the\nreal published value; do not guess or omit it.",
+            "title": "Advisory Cvss",
+            "type": "number"
+          },
+          "assumptions": {
+            "description": "Exploitability/reachability assumptions & confidence.",
+            "title": "Assumptions",
+            "type": "string"
+          },
+          "cve": {
+            "description": "``CVE-YYYY-NNNNN`` — required and must be verified.",
+            "title": "Cve",
+            "type": "string"
+          },
+          "cwe": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "description": "``CWE-NNN`` (most specific) if certain, else omit.",
+            "title": "Cwe"
+          },
+          "dependency_path": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "description": "The resolution chain from the direct dependency\nto the vulnerable package, joined with `` > `` (e.g.\n``express@4.18.1 > body-parser@1.20.0 > qs@6.10.2``). Omit\nfor direct dependencies.",
+            "title": "Dependency Path"
+          },
+          "description": {
+            "description": "What the CVE is and why the pinned version is affected.",
+            "title": "Description",
+            "type": "string"
+          },
+          "fix_effort": {
+            "default": "low",
+            "description": "One of ``trivial`` / ``low`` / ``medium`` / ``high``\n(dependency upgrades are usually ``trivial``/``low``).",
+            "title": "Fix Effort",
+            "type": "string"
+          },
+          "fixed_version": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "description": "First non-vulnerable version, if known.",
+            "title": "Fixed Version"
+          },
+          "impact": {
+            "description": "What the CVE enables; business risk in this context.",
+            "title": "Impact",
+            "type": "string"
+          },
+          "installed_version": {
+            "description": "The version currently pinned/installed.",
+            "title": "Installed Version",
+            "type": "string"
+          },
+          "introduced_by": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "description": "For a **transitive** dependency, the direct\ndependency (from the project's own manifest) that pulls the\nvulnerable package in, as ``name@version`` (e.g.\n``express@4.18.1``). Omit when the vulnerable package is\nitself a direct dependency.",
+            "title": "Introduced By"
+          },
+          "manifest_path": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "description": "**Required.** The repo-relative path of the\nlockfile/manifest where the vulnerable version was observed —\ntrivy's ``Target`` (e.g. ``package-lock.json``,\n``services/api/pom.xml``). Strip any scan-workspace or repo\ncheckout directory prefix so the path is relative to the\nrepository root. This binds the finding to its exact file so\nremediation can target the right repository.",
+            "title": "Manifest Path"
+          },
+          "package_ecosystem": {
+            "description": "e.g. ``npm`` / ``pypi`` / ``maven`` / ``go``.",
+            "title": "Package Ecosystem",
+            "type": "string"
+          },
+          "package_name": {
+            "description": "Affected package name (e.g. ``lodash``).",
+            "title": "Package Name",
+            "type": "string"
+          },
+          "reachability": {
+            "default": "unknown",
+            "description": "Usage-evidence level from static analysis — one of\n``not_imported`` / ``imported`` / ``vulnerable_symbol_used`` /\n``reachable_call_path`` / ``unknown``. Claim only what the\nevidence proves; when in doubt use ``unknown``.",
+            "title": "Reachability",
+            "type": "string"
+          },
+          "reachability_evidence": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "description": "The concrete proof for the claimed level\n(required for any level other than ``unknown``): repo-relative\n``file:line`` of the import or symbol usage, the matched\nadvisory symbols, or the govulncheck call-path excerpt.",
+            "title": "Reachability Evidence"
+          },
+          "remediation_steps": {
+            "description": "How to fix (usually upgrade to a fixed version).",
+            "title": "Remediation Steps",
+            "type": "string"
+          },
+          "target": {
+            "description": "Affected repository / project / manifest.",
+            "title": "Target",
+            "type": "string"
+          },
+          "technical_analysis": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "description": "Optional deeper mechanism/root-cause detail.",
+            "title": "Technical Analysis"
+          },
+          "title": {
+            "description": "e.g. ``\"CVE-2024-1234 in lodash 4.17.20 (prototype pollution)\"``.",
+            "title": "Title",
+            "type": "string"
+          }
+        },
+        "required": [
+          "title",
+          "description",
+          "target",
+          "cve",
+          "package_name",
+          "installed_version",
+          "advisory_cvss",
+          "impact",
+          "remediation_steps",
+          "assumptions",
+          "package_ecosystem"
+        ],
+        "title": "create_dependency_report_args",
+        "type": "object"
+      },
+      "schema_sha256": "80dd624d983d4f36dda589febb16461611d19242ef86d6b68436585ef8cd0e5b",
+      "timeout_seconds": 180.0
+    },
+    {
+      "mcp_names": {
+        "child": "mcp__strix_agent002__create_note",
+        "root": "mcp__strix_root0001__create_note"
+      },
+      "name": "create_note",
+      "roles": [
+        "root",
+        "child"
+      ],
+      "schema": {
+        "additionalProperties": false,
+        "properties": {
+          "category": {
+            "default": "general",
+            "description": "One of the categories above. Default ``\"general\"``.",
+            "title": "Category",
+            "type": "string"
+          },
+          "content": {
+            "description": "Full note body. Markdown is preserved.",
+            "title": "Content",
+            "type": "string"
+          },
+          "tags": {
+            "anyOf": [
+              {
+                "items": {
+                  "type": "string"
+                },
+                "type": "array"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Optional free-form tags.",
+            "title": "Tags"
+          },
+          "title": {
+            "description": "Short headline.",
+            "title": "Title",
+            "type": "string"
+          }
+        },
+        "required": [
+          "title",
+          "content",
+          "category",
+          "tags"
+        ],
+        "title": "create_note_args",
+        "type": "object"
+      },
+      "schema_sha256": "52c07b6afd5df00303e980b96c6a47fd93530c767b9bdc0513dbe959bd2c1ec4",
+      "timeout_seconds": 30.0
+    },
+    {
+      "mcp_names": {
+        "child": "mcp__strix_agent002__create_todo",
+        "root": "mcp__strix_root0001__create_todo"
+      },
+      "name": "create_todo",
+      "roles": [
+        "root",
+        "child"
+      ],
+      "schema": {
+        "additionalProperties": false,
+        "properties": {
+          "todos": {
+            "description": "JSON array of todo objects. For one todo, pass a one-item\nlist. Each object's fields:\n\n- ``title`` (str, **required**): short actionable title,\n  e.g. ``\"Test /api/admin for IDOR\"``.\n- ``description`` (str, optional): extra context or\n  acceptance criteria.\n- ``priority`` (str, optional): one of ``\"low\"`` /\n  ``\"normal\"`` / ``\"high\"`` / ``\"critical\"``. Anything else,\n  including omitting it, falls back to ``\"normal\"`` rather\n  than failing.\n\nExample: ``[{\"title\": \"Probe /admin\", \"priority\": \"high\"},\n{\"title\": \"Check JWT alg=none\"}]``.",
+            "title": "Todos",
+            "type": "string"
+          }
+        },
+        "required": [
+          "todos"
+        ],
+        "title": "create_todo_args",
+        "type": "object"
+      },
+      "schema_sha256": "459b4c9390140f5e07dba34cda63e70bc11853b77a952ae04b21ee934c7f3692",
+      "timeout_seconds": 30.0
+    },
+    {
+      "mcp_names": {
+        "child": "mcp__strix_agent002__create_vulnerability_report",
+        "root": "mcp__strix_root0001__create_vulnerability_report"
+      },
+      "name": "create_vulnerability_report",
+      "roles": [
+        "root",
+        "child"
+      ],
+      "schema": {
+        "properties": {
+          "assumptions": {
+            "title": "Assumptions",
+            "type": "string"
+          },
+          "code_locations": {
+            "anyOf": [
+              {
+                "items": {
+                  "additionalProperties": true,
+                  "type": "object"
+                },
+                "type": "array"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Code Locations"
+          },
+          "cve": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Cve"
+          },
+          "cvss_breakdown": {
+            "additionalProperties": {
+              "type": "string"
+            },
+            "title": "Cvss Breakdown",
+            "type": "object"
+          },
+          "cwe": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Cwe"
+          },
+          "description": {
+            "title": "Description",
+            "type": "string"
+          },
+          "endpoint": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Endpoint"
+          },
+          "evidence": {
+            "title": "Evidence",
+            "type": "string"
+          },
+          "fix_effort": {
+            "title": "Fix Effort",
+            "type": "string"
+          },
+          "fix_pr_body": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Fix Pr Body"
+          },
+          "impact": {
+            "title": "Impact",
+            "type": "string"
+          },
+          "method": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Method"
+          },
+          "poc_description": {
+            "title": "Poc Description",
+            "type": "string"
+          },
+          "poc_script_code": {
+            "title": "Poc Script Code",
+            "type": "string"
+          },
+          "remediation_steps": {
+            "title": "Remediation Steps",
+            "type": "string"
+          },
+          "target": {
+            "title": "Target",
+            "type": "string"
+          },
+          "technical_analysis": {
+            "title": "Technical Analysis",
+            "type": "string"
+          },
+          "title": {
+            "title": "Title",
+            "type": "string"
+          }
+        },
+        "required": [
+          "title",
+          "description",
+          "impact",
+          "target",
+          "technical_analysis",
+          "poc_description",
+          "poc_script_code",
+          "remediation_steps",
+          "evidence",
+          "assumptions",
+          "fix_effort",
+          "cvss_breakdown"
+        ],
+        "title": "create_vulnerability_report_args",
+        "type": "object"
+      },
+      "schema_sha256": "f8c3c2362266f11bd074c4026600fe5986c564cd2dfa5a6bca048d2c97b36d37",
+      "timeout_seconds": 180.0
+    },
+    {
+      "mcp_names": {
+        "child": "mcp__strix_agent002__delete_note",
+        "root": "mcp__strix_root0001__delete_note"
+      },
+      "name": "delete_note",
+      "roles": [
+        "root",
+        "child"
+      ],
+      "schema": {
+        "additionalProperties": false,
+        "properties": {
+          "note_id": {
+            "description": "Note id to delete.",
+            "title": "Note Id",
+            "type": "string"
+          }
+        },
+        "required": [
+          "note_id"
+        ],
+        "title": "delete_note_args",
+        "type": "object"
+      },
+      "schema_sha256": "e40eed31d301215417964c64619be3ca511c3ece7b2ef626f21008bfdf5c63cf",
+      "timeout_seconds": 30.0
+    },
+    {
+      "mcp_names": {
+        "child": "mcp__strix_agent002__delete_todo",
+        "root": "mcp__strix_root0001__delete_todo"
+      },
+      "name": "delete_todo",
+      "roles": [
+        "root",
+        "child"
+      ],
+      "schema": {
+        "additionalProperties": false,
+        "properties": {
+          "todo_ids": {
+            "description": "JSON array of todo IDs to delete. For one todo, pass\na one-item list.",
+            "title": "Todo Ids",
+            "type": "string"
+          }
+        },
+        "required": [
+          "todo_ids"
+        ],
+        "title": "delete_todo_args",
+        "type": "object"
+      },
+      "schema_sha256": "90b257bec4c3ecee50becfe915c6177d844b988f920714ce8a03e175cb6c8520",
+      "timeout_seconds": 30.0
+    },
+    {
+      "mcp_names": {
+        "child": "mcp__strix_agent002__exec_command",
+        "root": "mcp__strix_root0001__exec_command"
+      },
+      "name": "exec_command",
+      "roles": [
+        "root",
+        "child"
+      ],
+      "schema": {
+        "properties": {
+          "cmd": {
+            "description": "Shell command to execute.",
+            "minLength": 1,
+            "title": "Cmd",
+            "type": "string"
+          },
+          "login": {
+            "default": true,
+            "description": "Whether to run the shell with -l/-i semantics. Defaults to true.",
+            "title": "Login",
+            "type": "boolean"
+          },
+          "max_output_tokens": {
+            "anyOf": [
+              {
+                "minimum": 1,
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "description": "Maximum number of tokens to return. Excess output will be truncated.",
+            "title": "Max Output Tokens"
+          },
+          "shell": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "description": "Shell binary to launch. Defaults to the user's default shell.",
+            "title": "Shell"
+          },
+          "tty": {
+            "default": false,
+            "description": "Whether to allocate a TTY for the command. Defaults to false (plain pipes); set to true to open a PTY and access TTY process.",
+            "title": "Tty",
+            "type": "boolean"
+          },
+          "workdir": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "description": "Optional working directory to run the command in; defaults to the turn cwd.",
+            "title": "Workdir"
+          },
+          "yield_time_ms": {
+            "default": 10000,
+            "description": "How long to wait (in milliseconds) for output before yielding.",
+            "minimum": 0,
+            "title": "Yield Time Ms",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "cmd"
+        ],
+        "title": "ExecCommandArgs",
+        "type": "object"
+      },
+      "schema_sha256": "e2beaf714ac260ad5b58c195fd6bc5da088dd7d28cc45eb248458afcfc279baf",
+      "timeout_seconds": null
+    },
+    {
+      "mcp_names": {
+        "root": "mcp__strix_root0001__finish_scan"
+      },
+      "name": "finish_scan",
+      "roles": [
+        "root"
+      ],
+      "schema": {
+        "additionalProperties": false,
+        "properties": {
+          "executive_summary": {
+            "description": "Business-level summary for leadership.",
+            "title": "Executive Summary",
+            "type": "string"
+          },
+          "methodology": {
+            "description": "Frameworks, scope, and approach.",
+            "title": "Methodology",
+            "type": "string"
+          },
+          "recommendations": {
+            "description": "Prioritized, actionable remediation.",
+            "title": "Recommendations",
+            "type": "string"
+          },
+          "technical_analysis": {
+            "description": "Consolidated findings + systemic themes.",
+            "title": "Technical Analysis",
+            "type": "string"
+          }
+        },
+        "required": [
+          "executive_summary",
+          "methodology",
+          "technical_analysis",
+          "recommendations"
+        ],
+        "title": "finish_scan_args",
+        "type": "object"
+      },
+      "schema_sha256": "b07c409b41b657bb956de358a8121174a363c50f7624b0dc70fd0310ed1ba1f2",
+      "timeout_seconds": 60.0
+    },
+    {
+      "mcp_names": {
+        "child": "mcp__strix_agent002__get_note",
+        "root": "mcp__strix_root0001__get_note"
+      },
+      "name": "get_note",
+      "roles": [
+        "root",
+        "child"
+      ],
+      "schema": {
+        "additionalProperties": false,
+        "properties": {
+          "note_id": {
+            "description": "Note id from ``create_note`` or a ``list_notes`` entry.",
+            "title": "Note Id",
+            "type": "string"
+          }
+        },
+        "required": [
+          "note_id"
+        ],
+        "title": "get_note_args",
+        "type": "object"
+      },
+      "schema_sha256": "2a5133ab7b4aaedd7c03b9a16a8e082abbc71db27250bcd226187056de50552c",
+      "timeout_seconds": 30.0
+    },
+    {
+      "mcp_names": {
+        "child": "mcp__strix_agent002__get_report",
+        "root": "mcp__strix_root0001__get_report"
+      },
+      "name": "get_report",
+      "roles": [
+        "root",
+        "child"
+      ],
+      "schema": {
+        "additionalProperties": false,
+        "properties": {
+          "report_id": {
+            "description": "Report id from ``list_reports`` or a\n``create_vulnerability_report`` / ``create_dependency_report``\nresponse (format ``vuln-NNNN``).",
+            "title": "Report Id",
+            "type": "string"
+          }
+        },
+        "required": [
+          "report_id"
+        ],
+        "title": "get_report_args",
+        "type": "object"
+      },
+      "schema_sha256": "fd8d4ae49b8e98d244a2d08c560c0452f99b9ce3863d945bb3840a95f87034a7",
+      "timeout_seconds": 30.0
+    },
+    {
+      "mcp_names": {
+        "child": "mcp__strix_agent002__list_notes",
+        "root": "mcp__strix_root0001__list_notes"
+      },
+      "name": "list_notes",
+      "roles": [
+        "root",
+        "child"
+      ],
+      "schema": {
+        "additionalProperties": false,
+        "properties": {
+          "category": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Filter by category.",
+            "title": "Category"
+          },
+          "include_content": {
+            "default": false,
+            "description": "When False (default) entries have a preview;\nwhen True the full ``content`` is included.",
+            "title": "Include Content",
+            "type": "boolean"
+          },
+          "search": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Substring match against title and content.",
+            "title": "Search"
+          },
+          "tags": {
+            "anyOf": [
+              {
+                "items": {
+                  "type": "string"
+                },
+                "type": "array"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Filter to notes that have any of these tags.",
+            "title": "Tags"
+          }
+        },
+        "required": [
+          "category",
+          "tags",
+          "search",
+          "include_content"
+        ],
+        "title": "list_notes_args",
+        "type": "object"
+      },
+      "schema_sha256": "13239264d3cda35d5a51e456daea5113ef9ca7943a1aa0d4e495bdc3de04f08f",
+      "timeout_seconds": 30.0
+    },
+    {
+      "mcp_names": {
+        "child": "mcp__strix_agent002__list_reports",
+        "root": "mcp__strix_root0001__list_reports"
+      },
+      "name": "list_reports",
+      "roles": [
+        "root",
+        "child"
+      ],
+      "schema": {
+        "additionalProperties": false,
+        "properties": {
+          "finding_class": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Filter to ``dynamic`` (PoC-backed) or\n``dependency_cve`` (known-CVE supply-chain).",
+            "title": "Finding Class"
+          },
+          "include_details": {
+            "default": false,
+            "description": "When False (default) entries are compact; when\nTrue full report bodies are returned.",
+            "title": "Include Details",
+            "type": "boolean"
+          },
+          "search": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Substring match against title and description.",
+            "title": "Search"
+          },
+          "severity": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Filter to one of ``critical`` / ``high`` / ``medium`` /\n``low`` / ``info`` / ``none``.",
+            "title": "Severity"
+          },
+          "target": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Substring match against a report's target / endpoint.",
+            "title": "Target"
+          }
+        },
+        "required": [
+          "severity",
+          "finding_class",
+          "target",
+          "search",
+          "include_details"
+        ],
+        "title": "list_reports_args",
+        "type": "object"
+      },
+      "schema_sha256": "aa03bb5893f01f4e8a068379a21140a07da33133f30f0ec94dbfc9ea8324f1dc",
+      "timeout_seconds": 30.0
+    },
+    {
+      "mcp_names": {
+        "child": "mcp__strix_agent002__list_requests",
+        "root": "mcp__strix_root0001__list_requests"
+      },
+      "name": "list_requests",
+      "roles": [
+        "root",
+        "child"
+      ],
+      "schema": {
+        "additionalProperties": false,
+        "properties": {
+          "after": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Cursor from a previous response's ``page_info.end_cursor``.",
+            "title": "After"
+          },
+          "first": {
+            "default": 50,
+            "description": "Number of entries to return (default 50).",
+            "title": "First",
+            "type": "integer"
+          },
+          "httpql_filter": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Caido HTTPQL query (optional).",
+            "title": "Httpql Filter"
+          },
+          "scope_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Restrict to a Caido scope (managed via ``scope_rules``).",
+            "title": "Scope Id"
+          },
+          "sort_by": {
+            "default": "timestamp",
+            "description": "One of ``timestamp`` / ``host`` / ``method`` / ``path``\n/ ``status_code`` / ``response_time`` / ``response_size``\n/ ``source``.",
+            "enum": [
+              "timestamp",
+              "host",
+              "method",
+              "path",
+              "status_code",
+              "response_time",
+              "response_size",
+              "source"
+            ],
+            "title": "Sort By",
+            "type": "string"
+          },
+          "sort_order": {
+            "default": "desc",
+            "description": "``asc`` or ``desc``.",
+            "enum": [
+              "asc",
+              "desc"
+            ],
+            "title": "Sort Order",
+            "type": "string"
+          }
+        },
+        "required": [
+          "httpql_filter",
+          "first",
+          "after",
+          "sort_by",
+          "sort_order",
+          "scope_id"
+        ],
+        "title": "list_requests_args",
+        "type": "object"
+      },
+      "schema_sha256": "b4fcb7e911c20ca2f0b3f42565486f570545722f6d227184045c9c9181ff07e6",
+      "timeout_seconds": 120.0
+    },
+    {
+      "mcp_names": {
+        "child": "mcp__strix_agent002__list_sitemap",
+        "root": "mcp__strix_root0001__list_sitemap"
+      },
+      "name": "list_sitemap",
+      "roles": [
+        "root",
+        "child"
+      ],
+      "schema": {
+        "additionalProperties": false,
+        "properties": {
+          "depth": {
+            "default": "DIRECT",
+            "description": "``\"DIRECT\"`` (immediate children) or ``\"ALL\"``\n(recursive subtree). Only meaningful with ``parent_id``.",
+            "enum": [
+              "DIRECT",
+              "ALL"
+            ],
+            "title": "Depth",
+            "type": "string"
+          },
+          "page": {
+            "default": 1,
+            "description": "1-indexed page (30 entries per page).",
+            "title": "Page",
+            "type": "integer"
+          },
+          "parent_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Entry ID to expand; omit for root domains.",
+            "title": "Parent Id"
+          },
+          "scope_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Limit roots to a Caido scope (only used when\n``parent_id`` is omitted). Manage scopes via ``scope_rules``.",
+            "title": "Scope Id"
+          }
+        },
+        "required": [
+          "scope_id",
+          "parent_id",
+          "depth",
+          "page"
+        ],
+        "title": "list_sitemap_args",
+        "type": "object"
+      },
+      "schema_sha256": "472624222dcfa5d3e6964f43fff1df4bd9f38c89eb13af7957a07cdfabed1c0f",
+      "timeout_seconds": 60.0
+    },
+    {
+      "mcp_names": {
+        "child": "mcp__strix_agent002__list_todos",
+        "root": "mcp__strix_root0001__list_todos"
+      },
+      "name": "list_todos",
+      "roles": [
+        "root",
+        "child"
+      ],
+      "schema": {
+        "additionalProperties": false,
+        "properties": {
+          "priority": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Filter — ``\"low\"`` / ``\"normal\"`` / ``\"high\"`` /\n``\"critical\"``.",
+            "title": "Priority"
+          },
+          "status": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Filter — ``\"pending\"`` / ``\"in_progress\"`` / ``\"done\"``.",
+            "title": "Status"
+          }
+        },
+        "required": [
+          "status",
+          "priority"
+        ],
+        "title": "list_todos_args",
+        "type": "object"
+      },
+      "schema_sha256": "92a901c4b50739f2f607475819d7b1c2fb586d81505384cf1cabb8017ab03eb2",
+      "timeout_seconds": 30.0
+    },
+    {
+      "mcp_names": {
+        "child": "mcp__strix_agent002__load_skill",
+        "root": "mcp__strix_root0001__load_skill"
+      },
+      "name": "load_skill",
+      "roles": [
+        "root",
+        "child"
+      ],
+      "schema": {
+        "additionalProperties": false,
+        "properties": {
+          "skills": {
+            "description": "List of skill names (e.g. ``[\"xss\", \"sql_injection\"]``).\nMax 5. Names match the bare files under\n``strix/skills/<category>/<name>.md``.",
+            "items": {
+              "type": "string"
+            },
+            "title": "Skills",
+            "type": "array"
+          }
+        },
+        "required": [
+          "skills"
+        ],
+        "title": "load_skill_args",
+        "type": "object"
+      },
+      "schema_sha256": "1b5e6feb26e9e2d272dffda4794bdddf41cead09cee2e4eeb92b9a254d4e063e",
+      "timeout_seconds": 10.0
+    },
+    {
+      "mcp_names": {
+        "child": "mcp__strix_agent002__mark_todo_done",
+        "root": "mcp__strix_root0001__mark_todo_done"
+      },
+      "name": "mark_todo_done",
+      "roles": [
+        "root",
+        "child"
+      ],
+      "schema": {
+        "additionalProperties": false,
+        "properties": {
+          "todo_ids": {
+            "description": "JSON array of todo IDs to mark done. For one todo,\npass a one-item list.",
+            "title": "Todo Ids",
+            "type": "string"
+          }
+        },
+        "required": [
+          "todo_ids"
+        ],
+        "title": "mark_todo_done_args",
+        "type": "object"
+      },
+      "schema_sha256": "cc10f577547ecd18b27ca704abab9567d0b9e031a8490ef5ea167696e322c2ef",
+      "timeout_seconds": 30.0
+    },
+    {
+      "mcp_names": {
+        "child": "mcp__strix_agent002__mark_todo_pending",
+        "root": "mcp__strix_root0001__mark_todo_pending"
+      },
+      "name": "mark_todo_pending",
+      "roles": [
+        "root",
+        "child"
+      ],
+      "schema": {
+        "additionalProperties": false,
+        "properties": {
+          "todo_ids": {
+            "description": "JSON array of todo IDs to reset to pending. For one\ntodo, pass a one-item list.",
+            "title": "Todo Ids",
+            "type": "string"
+          }
+        },
+        "required": [
+          "todo_ids"
+        ],
+        "title": "mark_todo_pending_args",
+        "type": "object"
+      },
+      "schema_sha256": "fb5522befa5067dc38771875480f7a0ef8ef6e5fd573199b1a65f9c48f844e6d",
+      "timeout_seconds": 30.0
+    },
+    {
+      "mcp_names": {
+        "child": "mcp__strix_agent002__repeat_request",
+        "root": "mcp__strix_root0001__repeat_request"
+      },
+      "name": "repeat_request",
+      "roles": [
+        "root",
+        "child"
+      ],
+      "schema": {
+        "properties": {
+          "modifications": {
+            "anyOf": [
+              {
+                "additionalProperties": true,
+                "type": "object"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "description": "Patch dict. Recognized keys:\n\n- ``url`` — replace the URL.\n- ``params`` — dict of query-string keys to add/update.\n- ``headers`` — dict of headers to add/update.\n- ``body`` — replace the body string entirely.\n- ``cookies`` — dict of cookies to add/update.",
+            "title": "Modifications"
+          },
+          "request_id": {
+            "description": "ID of the original request (from ``list_requests``).",
+            "title": "Request Id",
+            "type": "string"
+          }
+        },
+        "required": [
+          "request_id"
+        ],
+        "title": "repeat_request_args",
+        "type": "object"
+      },
+      "schema_sha256": "35011f4492b3814abb9d2b7a27534c9a346b00c40fd88523dbea3ff6caad83dc",
+      "timeout_seconds": 120.0
+    },
+    {
+      "mcp_names": {
+        "child": "mcp__strix_agent002__scope_rules",
+        "root": "mcp__strix_root0001__scope_rules"
+      },
+      "name": "scope_rules",
+      "roles": [
+        "root",
+        "child"
+      ],
+      "schema": {
+        "additionalProperties": false,
+        "properties": {
+          "action": {
+            "description": "\n\n- ``list`` — return all scopes.\n- ``get`` — single scope by ``scope_id``.\n- ``create`` — needs ``scope_name``, optionally\n  ``allowlist`` / ``denylist``.\n- ``update`` — needs ``scope_id`` + ``scope_name``;\n  allowlist / denylist replace the previous values.\n- ``delete`` — needs ``scope_id``.",
+            "enum": [
+              "get",
+              "list",
+              "create",
+              "update",
+              "delete"
+            ],
+            "title": "Action",
+            "type": "string"
+          },
+          "allowlist": {
+            "anyOf": [
+              {
+                "items": {
+                  "type": "string"
+                },
+                "type": "array"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Domain patterns to include (e.g.\n``[\"*.example.com\", \"api.test.com\"]``).",
+            "title": "Allowlist"
+          },
+          "denylist": {
+            "anyOf": [
+              {
+                "items": {
+                  "type": "string"
+                },
+                "type": "array"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Patterns to exclude.",
+            "title": "Denylist"
+          },
+          "scope_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Required for ``get`` / ``update`` / ``delete``.",
+            "title": "Scope Id"
+          },
+          "scope_name": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Required for ``create`` / ``update``.",
+            "title": "Scope Name"
+          }
+        },
+        "required": [
+          "action",
+          "allowlist",
+          "denylist",
+          "scope_id",
+          "scope_name"
+        ],
+        "title": "scope_rules_args",
+        "type": "object"
+      },
+      "schema_sha256": "494c3ca65eb8d8d1d9b8be3d9e3ae8dc2e42d4b9f6a218607f93dfc78e0aad65",
+      "timeout_seconds": 60.0
+    },
+    {
+      "mcp_names": {
+        "child": "mcp__strix_agent002__send_message_to_agent",
+        "root": "mcp__strix_root0001__send_message_to_agent"
+      },
+      "name": "send_message_to_agent",
+      "roles": [
+        "root",
+        "child"
+      ],
+      "schema": {
+        "additionalProperties": false,
+        "properties": {
+          "message": {
+            "description": "The full message body. Be specific — include payloads,\nURLs, or what you want them to do, not just headlines.",
+            "title": "Message",
+            "type": "string"
+          },
+          "message_type": {
+            "default": "information",
+            "description": "``query`` (you want a reply), ``instruction``\n(you're directing them), ``information`` (FYI, no reply\nexpected). Default ``information``.",
+            "enum": [
+              "query",
+              "instruction",
+              "information"
+            ],
+            "title": "Message Type",
+            "type": "string"
+          },
+          "priority": {
+            "default": "normal",
+            "description": "``low`` / ``normal`` / ``high`` / ``urgent``.",
+            "enum": [
+              "low",
+              "normal",
+              "high",
+              "urgent"
+            ],
+            "title": "Priority",
+            "type": "string"
+          },
+          "target_agent_id": {
+            "description": "Recipient's 8-char id.",
+            "title": "Target Agent Id",
+            "type": "string"
+          }
+        },
+        "required": [
+          "target_agent_id",
+          "message",
+          "message_type",
+          "priority"
+        ],
+        "title": "send_message_to_agent_args",
+        "type": "object"
+      },
+      "schema_sha256": "7fff480c47396e7316a53854b5f8368e7225124369ec6ebd31bc13bda4f98e91",
+      "timeout_seconds": 30.0
+    },
+    {
+      "mcp_names": {
+        "child": "mcp__strix_agent002__stop_agent",
+        "root": "mcp__strix_root0001__stop_agent"
+      },
+      "name": "stop_agent",
+      "roles": [
+        "root",
+        "child"
+      ],
+      "schema": {
+        "additionalProperties": false,
+        "properties": {
+          "cascade": {
+            "default": true,
+            "description": "If ``True`` (default), also stop every descendant of\n``target_agent_id`` leaves-first. ``False`` stops only the\ntarget.",
+            "title": "Cascade",
+            "type": "boolean"
+          },
+          "reason": {
+            "default": "",
+            "description": "Optional human-readable reason for the stop, surfaced\nin logs and telemetry.",
+            "title": "Reason",
+            "type": "string"
+          },
+          "target_agent_id": {
+            "description": "The 8-char id from ``view_agent_graph`` /\n``create_agent``. Cannot stop yourself.",
+            "title": "Target Agent Id",
+            "type": "string"
+          }
+        },
+        "required": [
+          "target_agent_id",
+          "cascade",
+          "reason"
+        ],
+        "title": "stop_agent_args",
+        "type": "object"
+      },
+      "schema_sha256": "989adc7638b1083f38dc38b063fdf91d4122d2225e2961bb55157ea4332706db",
+      "timeout_seconds": 30.0
+    },
+    {
+      "mcp_names": {
+        "child": "mcp__strix_agent002__think",
+        "root": "mcp__strix_root0001__think"
+      },
+      "name": "think",
+      "roles": [
+        "root",
+        "child"
+      ],
+      "schema": {
+        "additionalProperties": false,
+        "properties": {
+          "thought": {
+            "description": "The reasoning to record. Must be non-empty.",
+            "title": "Thought",
+            "type": "string"
+          }
+        },
+        "required": [
+          "thought"
+        ],
+        "title": "think_args",
+        "type": "object"
+      },
+      "schema_sha256": "6c4e0fe6b2c65be07e27bc24d30311e5a2aa0642ba6ca37692f9cb18b4be7608",
+      "timeout_seconds": 10.0
+    },
+    {
+      "mcp_names": {
+        "child": "mcp__strix_agent002__update_note",
+        "root": "mcp__strix_root0001__update_note"
+      },
+      "name": "update_note",
+      "roles": [
+        "root",
+        "child"
+      ],
+      "schema": {
+        "additionalProperties": false,
+        "properties": {
+          "content": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "New content, or ``None`` to keep.",
+            "title": "Content"
+          },
+          "note_id": {
+            "description": "Target note's 6-char ID.",
+            "title": "Note Id",
+            "type": "string"
+          },
+          "tags": {
+            "anyOf": [
+              {
+                "items": {
+                  "type": "string"
+                },
+                "type": "array"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "New tags list, or ``None`` to keep.",
+            "title": "Tags"
+          },
+          "title": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "New title, or ``None`` to keep.",
+            "title": "Title"
+          }
+        },
+        "required": [
+          "note_id",
+          "title",
+          "content",
+          "tags"
+        ],
+        "title": "update_note_args",
+        "type": "object"
+      },
+      "schema_sha256": "5cef37abf99fed995267b65e94dfd1cf25bb1513581176dbcbc2e4d18e13fc38",
+      "timeout_seconds": 30.0
+    },
+    {
+      "mcp_names": {
+        "child": "mcp__strix_agent002__update_todo",
+        "root": "mcp__strix_root0001__update_todo"
+      },
+      "name": "update_todo",
+      "roles": [
+        "root",
+        "child"
+      ],
+      "schema": {
+        "additionalProperties": false,
+        "properties": {
+          "updates": {
+            "description": "JSON array of update objects. For one update, pass a\none-item list. Each object's fields:\n\n- ``todo_id`` (str, **required**): ID returned by\n  ``create_todo``.\n- ``title`` (str, optional): new title.\n- ``description`` (str, optional): new description (empty\n  string clears it).\n- ``priority`` (str, optional): one of ``\"low\"`` /\n  ``\"normal\"`` / ``\"high\"`` / ``\"critical\"``.\n- ``status`` (str, optional): one of ``\"pending\"`` /\n  ``\"in_progress\"`` / ``\"done\"``.\n\nOmitted fields stay unchanged. Example:\n``[{\"todo_id\": \"abc\", \"status\": \"in_progress\",\n\"priority\": \"high\"}]``.",
+            "title": "Updates",
+            "type": "string"
+          }
+        },
+        "required": [
+          "updates"
+        ],
+        "title": "update_todo_args",
+        "type": "object"
+      },
+      "schema_sha256": "873745a855e5e1dc176fa55dcfcbe5b3d0caf4ba319e925b05475bb3baf1dbf5",
+      "timeout_seconds": 30.0
+    },
+    {
+      "mcp_names": {
+        "child": "mcp__strix_agent002__view_agent_graph",
+        "root": "mcp__strix_root0001__view_agent_graph"
+      },
+      "name": "view_agent_graph",
+      "roles": [
+        "root",
+        "child"
+      ],
+      "schema": {
+        "additionalProperties": false,
+        "properties": {},
+        "required": [],
+        "title": "view_agent_graph_args",
+        "type": "object"
+      },
+      "schema_sha256": "e8372a0732901922a14fb7307a20d23fa6e56aa03bc098c541844581d7ad1635",
+      "timeout_seconds": 30.0
+    },
+    {
+      "mcp_names": {
+        "child": "mcp__strix_agent002__view_image",
+        "root": "mcp__strix_root0001__view_image"
+      },
+      "name": "view_image",
+      "roles": [
+        "root",
+        "child"
+      ],
+      "schema": {
+        "properties": {
+          "path": {
+            "description": "Path to the image file. Absolute and relative workspace paths are supported.",
+            "minLength": 1,
+            "title": "Path",
+            "type": "string"
+          }
+        },
+        "required": [
+          "path"
+        ],
+        "title": "ViewImageArgs",
+        "type": "object"
+      },
+      "schema_sha256": "d1ba7cdff79a3c6e64e4a8165156f491b713aa1c6d78d11be8c033798f39f4bc",
+      "timeout_seconds": null
+    },
+    {
+      "mcp_names": {
+        "child": "mcp__strix_agent002__view_request",
+        "root": "mcp__strix_root0001__view_request"
+      },
+      "name": "view_request",
+      "roles": [
+        "root",
+        "child"
+      ],
+      "schema": {
+        "additionalProperties": false,
+        "properties": {
+          "page": {
+            "default": 1,
+            "description": "1-indexed page number (only when no ``search_pattern``).",
+            "title": "Page",
+            "type": "integer"
+          },
+          "page_size": {
+            "default": 50,
+            "description": "Lines per page.",
+            "title": "Page Size",
+            "type": "integer"
+          },
+          "part": {
+            "default": "request",
+            "description": "``\"request\"`` or ``\"response\"``.",
+            "enum": [
+              "request",
+              "response"
+            ],
+            "title": "Part",
+            "type": "string"
+          },
+          "request_id": {
+            "description": "Request ID from ``list_requests``.",
+            "title": "Request Id",
+            "type": "string"
+          },
+          "search_pattern": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Optional regex; switches the response shape to\ncompact hits.",
+            "title": "Search Pattern"
+          }
+        },
+        "required": [
+          "request_id",
+          "part",
+          "search_pattern",
+          "page",
+          "page_size"
+        ],
+        "title": "view_request_args",
+        "type": "object"
+      },
+      "schema_sha256": "36d355e57a497d5c332a364b154b50ce01af6e09f5da924b705d7228092c1664",
+      "timeout_seconds": 60.0
+    },
+    {
+      "mcp_names": {
+        "child": "mcp__strix_agent002__view_sitemap_entry",
+        "root": "mcp__strix_root0001__view_sitemap_entry"
+      },
+      "name": "view_sitemap_entry",
+      "roles": [
+        "root",
+        "child"
+      ],
+      "schema": {
+        "additionalProperties": false,
+        "properties": {
+          "entry_id": {
+            "description": "ID from ``list_sitemap`` (or any nested entry).",
+            "title": "Entry Id",
+            "type": "string"
+          }
+        },
+        "required": [
+          "entry_id"
+        ],
+        "title": "view_sitemap_entry_args",
+        "type": "object"
+      },
+      "schema_sha256": "442af2eeab0e70eed5411a67b9b1dc5e079c5a829f0d71dd56efabe82f4a4877",
+      "timeout_seconds": 60.0
+    },
+    {
+      "mcp_names": {
+        "child": "mcp__strix_agent002__wait_for_agents",
+        "root": "mcp__strix_root0001__wait_for_agents"
+      },
+      "name": "wait_for_agents",
+      "roles": [
+        "root",
+        "child"
+      ],
+      "schema": {
+        "additionalProperties": false,
+        "properties": {
+          "reason": {
+            "default": "Waiting for messages from other agents",
+            "description": "One-line note shown in graph snapshots while you're\nwaiting (helps a human or sibling agent debug who's stuck\non what).",
+            "title": "Reason",
+            "type": "string"
+          },
+          "timeout_seconds": {
+            "default": 300,
+            "description": "Max seconds to wait (default 300, and values above\nthat are cut short by a hard ceiling). This is only\na cap — the tool returns the INSTANT a message arrives, so a\nlarger value never makes you wait longer when the reply does\ncome. Right-size it to what you're waiting on: a short wait\n(e.g. 10-60s) for a quick ack or a small/fast subtask, and a\nlonger one (e.g. ~100-200s) only for genuinely long-running\nwork (deep recon, exploitation, a full sub-scan). The cap only\nbites when the expected message never arrives — so an oversized\ntimeout on a trivial wait just strands you idle until it\nelapses. On timeout the tool returns and you decide whether to\nkeep working or wait again.",
+            "title": "Timeout Seconds",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "reason",
+          "timeout_seconds"
+        ],
+        "title": "wait_for_agents_args",
+        "type": "object"
+      },
+      "schema_sha256": "83acd0fdff2f7f260975c53b77e303a4430f746a994b42b163d7d506158dba4c",
+      "timeout_seconds": 301.0
+    },
+    {
+      "mcp_names": {
+        "child": "mcp__strix_agent002__web_search",
+        "root": "mcp__strix_root0001__web_search"
+      },
+      "name": "web_search",
+      "roles": [
+        "root",
+        "child"
+      ],
+      "schema": {
+        "additionalProperties": false,
+        "properties": {
+          "query": {
+            "description": "The search query — a full sentence with version numbers,\ntarget tech, and the specific question. Treat it like a\nticket title for a senior security engineer.",
+            "title": "Query",
+            "type": "string"
+          }
+        },
+        "required": [
+          "query"
+        ],
+        "title": "web_search_args",
+        "type": "object"
+      },
+      "schema_sha256": "ebe21ae594bb8ae16641ff57559f6f377dcb1840ce7a2617518133740462f17f",
+      "timeout_seconds": 330.0
+    }
+  ]
+}

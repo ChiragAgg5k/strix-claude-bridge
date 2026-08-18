@@ -1,0 +1,34 @@
+# Ownership boundaries
+
+This companion does not replace Strix wholesale. The table names the primary owner and the exact seam. Categories are normative and tested: **Unchanged Strix**, **Wrapped or Adapted Strix**, **Bridge-owned**, **Claude Agent SDK-owned**, **Docker-owned**, **User-policy-owned**.
+
+| Area | Classification | What is implemented here | Upstream source symbol/file | What remains unchanged/deferred |
+|---|---|---|---|---|
+| CLI and scan setup | Bridge-owned + Wrapped or Adapted Strix | `strix-claude-bridge scan` gates experimental/live use, then calls canonical target helpers. | `strix.interface.scan_setup.build_targets_info`; `strix.interface.utils.{clone_repository,collect_local_sources,stage_api_specs,generate_run_name}` | Native `strix` CLI/backend selection is unchanged and deferred. |
+| Scan configuration | Wrapped or Adapted Strix | Bridge builds the mapping consumed by Strix prompt/report setup. | `strix.config`; `strix.core.inputs.build_root_task` | Existing provider configuration remains untouched. |
+| Prompts | Wrapped or Adapted Strix | Uses rendered Strix root/child instructions; single-agent prototype strips delegation directives. | `strix.agents.factory.build_strix_agent`; `strix.core.inputs.build_scope_context` | Prompt content/methodology is Strix-owned. |
+| Skills | Unchanged Strix | Skill names are passed to `build_strix_agent`; Claude SDK built-in skills are disabled. | `strix.skills`; Strix agent factory | Skill loading behavior/content remains Strix-owned; exhaustive parity unverified. |
+| Function tools | Wrapped or Adapted Strix | Original FunctionTools are schema-copied into strict in-process MCP handlers; implementations are invoked directly. | `strix.tools.*`; `agents.tool_context.ToolContext` | Tool business logic remains Strix-owned. See [tool parity](tool-parity.md). |
+| Filesystem/shell capabilities | Wrapped or Adapted Strix | Capability clones bind to the actual scan sandbox and expose `apply_patch`/`exec_command`. | `agents.sandbox.capabilities.Filesystem`; `agents.sandbox.capabilities.Shell` | Command/file behavior and output spill remain upstream. |
+| Sandbox lifecycle | Docker-owned + Wrapped or Adapted Strix | Bridge asks Strix to create/delete a bundle and verifies cleanup; Docker executes commands. | `strix.runtime.session_manager.create_or_reuse`; backend client `delete` | Image/toolchain/network/capabilities are Strix/Docker deployment concerns. |
+| Agent/model loop | Claude Agent SDK-owned | `ClaudeSDKClient` owns query/tool/result streaming; one active transport per agent runtime. | `claude_agent_sdk.ClaudeSDKClient`; `ClaudeAgentOptions` | OpenAI Agents `Runner.run_streamed` is not called by this backend and remains unchanged for existing providers. |
+| Coordinator/graph | Wrapped or Adapted Strix | Reuses coordinator, graph tools, exact-one terminal notice; adds in-memory delivery plus hash-metadata-before-interrupt ordering. | `strix.core.agents.AgentCoordinator`; `strix.core.execution.notify_parent_on_terminal`; `strix.tools.agents_graph.*` | Native graph semantics remain Strix-owned; restart hydration is deferred. |
+| Findings/reports | Unchanged Strix + Wrapped or Adapted Strix | Original report tools/state/writers are used; dedupe is exact/deterministic to avoid hidden LiteLLM. | `strix.report.state.ReportState`; `strix.report.dedupe`; report tool modules | Intentional JSON/CSV/Markdown report content remains separate from metadata-only bridge state. |
+| SARIF | Unchanged Strix | Strix report state/writer emits SARIF 2.1.0. | Strix SARIF/report writer modules | Synthetic fallback locations can occur; no bridge rewrite. |
+| TUI/viewer | Unchanged Strix + Bridge-owned | Bridge has a standalone, currently unconnected legacy projection helper plus JSONL mirror; no runtime sink/viewer consumer calls it. | unchanged Strix viewer/TUI consumers; bridge `to_strix_stream_event` helper | Runtime TUI/viewer wiring and full Go protocol parity are deferred. |
+| Sessions/restart | Claude Agent SDK-owned + Bridge-owned | SDK native session is in-process authority; raw provider ID is memory-only and durable state stores task/session hashes. | `ClaudeSDKClient`; bridge `SessionCheckpoint`/`RunStateStore` | Strix SQLite is unchanged; lower-level and CLI process-restart resume are disabled. |
+| Events | Bridge-owned | Normalizes SDK frames into versioned sensitive/non-sensitive events. | SDK message dataclasses; bridge `event_adapter.py`; one live frame sample | Exhaustive live variants and full Strix interface compatibility are unverified. |
+| Usage | Bridge-owned + Wrapped or Adapted Strix | Counts requests/tokens/cache, captures provider `model_usage` keys, attributes real agent ID/name, forces zero dollars. | `ReportState.record_sdk_usage`; `agents.usage.Usage` | Strix API budget path remains unchanged and is not used for subscription runs. |
+| Authentication | Claude Agent SDK-owned + User-policy-owned | Bridge rejects known API/cloud override selectors; official tooling owns login. | official Claude tooling/SDK subprocess; bridge `auth.py` | Bridge never reads credentials and cannot attest account, organization, plan, or policy eligibility. |
+| Provider data/telemetry | Claude Agent SDK-owned + User-policy-owned | Bridge documents prompt/source/tool/finding transfer and keeps local durable mirrors metadata-only by default. | official SDK/provider terms | Retention, telemetry, cyber safeguards, and transfer approval are not bridge-controlled. |
+| Dependency pins | Bridge-owned | Exact Strix/SDK/OpenAI Agents runtime compatibility checks fail closed. | bridge `strix_integration.py`; `pyproject.toml`; `uv.lock` | Upgrades require inventory/tests/review; upstream packages are not patched. |
+| Publication/license | User-policy-owned | Nothing. | repository owner and applicable upstream/provider terms | No license, publication, commit, push, or release approval was added. |
+
+## Layer summary
+
+- **Unchanged in Strix:** existing OpenAI/LiteLLM providers and `Runner.run_streamed`, normal CLI, prompt/tool/report implementations, Docker image/toolchain, viewer/TUI/SQLite code.
+- **Adapted from Strix:** target setup, rendered agents, FunctionTool schemas/handlers, sandbox capability clones, coordinator, report state, and usage sink.
+- **Bridge-owned:** companion CLI, lifecycle/session abstraction, MCP adaptation, limits, metadata event/state files, cleanup ordering, deterministic dedupe, and documentation/tests.
+- **SDK-owned:** authentication subprocess, provider session/model loop, native query/event/tool routing, and provider session identifiers.
+- **Docker-owned:** container execution/isolation primitives; the production Strix image is less restricted than the standalone Alpine probe.
+- **User-policy-owned:** target authorization, Anthropic eligibility/organization approval, provider-data transfer approval, retention, licensing, and publication.
